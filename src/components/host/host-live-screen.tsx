@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Lock, Play, Trophy, Eye, Zap } from "lucide-react";
@@ -98,6 +98,29 @@ export function HostLiveScreen({
       await showLeaderboardAction(session.code);
       router.refresh();
     });
+
+  // Auto-lock when the timer runs out. Server-side already auto-locks when
+  // every player has answered; this is the time-based safety net.
+  useEffect(() => {
+    if (session.state !== "question_active") return;
+    if (!currentQuestion || !session.questionStartedAt) return;
+    const startedMs = new Date(session.questionStartedAt).getTime();
+    const total = currentQuestion.timeLimit * 1000;
+    // Use server-time elapsed if it's positive; otherwise fall back to the full
+    // duration so clock skew can't cut the round short.
+    const serverElapsed = Math.max(0, Date.now() - startedMs);
+    const remaining = Math.max(500, total - serverElapsed) + 750; // small grace
+    const id = setTimeout(() => {
+      advanceSessionAction(session.code, "lock").then(() => router.refresh());
+    }, remaining);
+    return () => clearTimeout(id);
+  }, [
+    session.state,
+    session.code,
+    session.questionStartedAt,
+    currentQuestion,
+    router,
+  ]);
 
   const renderControls = () => {
     switch (session.state) {

@@ -149,5 +149,21 @@ export async function submitAnswerAction(input: z.infer<typeof SubmitSchema>) {
     }
     throw e;
   }
+
+  // Auto-lock when everyone has answered. Best-effort; if it races with the
+  // host's manual lock, the second update is a no-op.
+  const [playerCount, responseCount] = await Promise.all([
+    prisma.player.count({ where: { sessionId: session.id } }),
+    prisma.response.count({
+      where: { sessionId: session.id, questionId: parsed.data.questionId },
+    }),
+  ]);
+  if (responseCount >= playerCount) {
+    await prisma.gameSession.updateMany({
+      where: { id: session.id, state: "question_active" },
+      data: { state: "question_locked" },
+    });
+  }
+
   return { ok: true as const };
 }
