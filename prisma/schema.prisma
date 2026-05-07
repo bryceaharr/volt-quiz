@@ -10,9 +10,9 @@ datasource db {
 model Profile {
   id          String   @id @db.Uuid
   email       String   @unique
-  displayName String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  displayName String?  @map("display_name")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
   quizzes     Quiz[]
 
   @@map("profiles")
@@ -25,13 +25,13 @@ enum QuizStatus {
 
 model Quiz {
   id          String     @id @default(cuid())
-  ownerId     String     @db.Uuid
+  ownerId     String     @map("owner_id") @db.Uuid
   title       String
   description String?
-  coverEmoji  String?    @default("⚡")
+  coverEmoji  String?    @default("⚡") @map("cover_emoji")
   status      QuizStatus @default(draft)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
 
   owner     Profile       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   questions Question[]
@@ -49,11 +49,11 @@ enum QuestionType {
 
 model Question {
   id          String       @id @default(cuid())
-  quizId      String
+  quizId      String       @map("quiz_id")
   type        QuestionType @default(multiple_choice)
   prompt      String
-  imageUrl    String?
-  timeLimit   Int          @default(20) // seconds
+  imageUrl    String?      @map("image_url")
+  timeLimit   Int          @default(20) @map("time_limit")
   points      Int          @default(1000)
   explanation String?
   order       Int
@@ -68,9 +68,9 @@ model Question {
 
 model AnswerOption {
   id         String  @id @default(cuid())
-  questionId String
+  questionId String  @map("question_id")
   text       String
-  isCorrect  Boolean @default(false)
+  isCorrect  Boolean @default(false) @map("is_correct")
   order      Int
 
   question  Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
@@ -92,14 +92,14 @@ enum SessionState {
 model GameSession {
   id                String       @id @default(cuid())
   code              String       @unique // 6-char join code
-  quizId            String
-  hostId            String       @db.Uuid
+  quizId            String       @map("quiz_id")
+  hostId            String       @map("host_id") @db.Uuid
   state             SessionState @default(lobby)
-  currentQuestionId String?
-  questionStartedAt DateTime?
-  startedAt         DateTime?
-  endedAt           DateTime?
-  createdAt         DateTime     @default(now())
+  currentQuestionId String?      @map("current_question_id")
+  questionStartedAt DateTime?    @map("question_started_at")
+  startedAt         DateTime?    @map("started_at")
+  endedAt           DateTime?    @map("ended_at")
+  createdAt         DateTime     @default(now()) @map("created_at")
 
   quiz      Quiz       @relation(fields: [quizId], references: [id], onDelete: Cascade)
   players   Player[]
@@ -111,11 +111,11 @@ model GameSession {
 
 model Player {
   id          String   @id @default(cuid())
-  sessionId   String
-  displayName String
-  avatarSeed  String   @default("default")
-  joinedAt    DateTime @default(now())
-  isConnected Boolean  @default(true)
+  sessionId   String   @map("session_id")
+  displayName String   @map("display_name")
+  avatarSeed  String   @default("default") @map("avatar_seed")
+  joinedAt    DateTime @default(now()) @map("joined_at")
+  isConnected Boolean  @default(true) @map("is_connected")
 
   session   GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   responses Response[]
@@ -127,15 +127,15 @@ model Player {
 
 model Response {
   id               String  @id @default(cuid())
-  sessionId        String
-  questionId       String
-  playerId         String
-  selectedOptionId String?
-  textAnswer       String?
-  msToAnswer       Int
-  isCorrect        Boolean @default(false)
-  pointsAwarded    Int     @default(0)
-  createdAt        DateTime @default(now())
+  sessionId        String  @map("session_id")
+  questionId       String  @map("question_id")
+  playerId         String  @map("player_id")
+  selectedOptionId String? @map("selected_option_id")
+  textAnswer       String? @map("text_answer")
+  msToAnswer       Int     @map("ms_to_answer")
+  isCorrect        Boolean @default(false) @map("is_correct")
+  pointsAwarded    Int     @default(0) @map("points_awarded")
+  createdAt        DateTime @default(now()) @map("created_at")
 
   session  GameSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   question Question      @relation(fields: [questionId], references: [id], onDelete: Cascade)
