@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+// Anchored to the client's local clock once the question becomes visible,
+// so server/client clock skew can't freeze the countdown.
 export function TimerBar({
   durationSec,
   startedAt,
@@ -11,7 +13,29 @@ export function TimerBar({
   startedAt: Date | null;
   paused?: boolean;
 }) {
+  const startedAtMs = startedAt ? new Date(startedAt).getTime() : null;
+  const localAnchorRef = useRef<{
+    serverStart: number;
+    localStart: number;
+  } | null>(null);
   const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!startedAtMs) {
+      localAnchorRef.current = null;
+      return;
+    }
+    if (
+      !localAnchorRef.current ||
+      localAnchorRef.current.serverStart !== startedAtMs
+    ) {
+      localAnchorRef.current = {
+        serverStart: startedAtMs,
+        localStart: Date.now(),
+      };
+      setNow(Date.now());
+    }
+  }, [startedAtMs]);
 
   useEffect(() => {
     if (paused) return;
@@ -19,8 +43,9 @@ export function TimerBar({
     return () => clearInterval(id);
   }, [paused]);
 
-  const startMs = startedAt ? new Date(startedAt).getTime() : now;
-  const elapsed = Math.max(0, now - startMs);
+  const elapsed = localAnchorRef.current
+    ? Math.max(0, now - localAnchorRef.current.localStart)
+    : 0;
   const total = durationSec * 1000;
   const remainingSec = Math.max(0, Math.ceil((total - elapsed) / 1000));
   const ratio = Math.max(0, Math.min(1, 1 - elapsed / total));
