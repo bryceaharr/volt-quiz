@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "motion/react";
 import type { AnswerOption, Question } from "@prisma/client";
 import { Image as ImageIcon } from "lucide-react";
 import { TimerBar } from "./timer-bar";
@@ -49,15 +48,12 @@ export function HostQuestionPanel({
       </div>
 
       {/* Big question text */}
-      <motion.h1
+      <h1
         key={question.id}
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="text-3xl lg:text-5xl font-bold tracking-tight text-center max-w-4xl mx-auto leading-tight"
+        className="text-3xl lg:text-5xl font-bold tracking-tight text-center max-w-4xl mx-auto leading-tight animate-in fade-in slide-in-from-bottom-2 duration-300"
       >
         {question.prompt}
-      </motion.h1>
+      </h1>
 
       {question.imageUrl && (
         <div className="mx-auto rounded-2xl overflow-hidden glass max-w-2xl w-full max-h-72">
@@ -79,12 +75,10 @@ export function HostQuestionPanel({
         }`}
       >
         {question.options.map((opt, i) => (
-          <motion.div
+          <div
             key={opt.id}
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3, delay: 0.1 + i * 0.06 }}
-            className={`bg-gradient-to-br ${COLORS[i % 4]} border-2 rounded-2xl px-6 py-6 flex items-center gap-4`}
+            className={`bg-gradient-to-br ${COLORS[i % 4]} border-2 rounded-2xl px-6 py-6 flex items-center gap-4 animate-in fade-in zoom-in-95 duration-300`}
+            style={{ animationDelay: `${i * 60}ms` }}
           >
             <span className="text-3xl font-bold opacity-60">
               {SHAPES[i % 4]}
@@ -96,7 +90,7 @@ export function HostQuestionPanel({
                 </span>
               )}
             </span>
-          </motion.div>
+          </div>
         ))}
       </div>
     </div>
