@@ -28,8 +28,10 @@ export function LoginForm() {
     const supabase = createSupabaseBrowserClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
+      // Email template should point at /auth/confirm with {{ .TokenHash }};
+      // emailRedirectTo is a fallback for hash-based clients.
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+        emailRedirectTo: `${window.location.origin}/auth/confirm?next=/dashboard`,
       },
     });
     if (error) {
